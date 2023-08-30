@@ -1,4 +1,4 @@
-module github.com/wmentor/epub
+module github.com/88250/epub
 
 go 1.15
 
