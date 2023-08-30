@@ -3,10 +3,8 @@ package epub
 import (
 	"archive/zip"
 	"bytes"
-	"io"
-	"io/ioutil"
-
 	"github.com/wmentor/html"
+	"io"
 )
 
 func Open(fn string) (*Book, error) {
@@ -58,36 +56,31 @@ func Reader(filename string, onChapter func(chapter string, data []byte) bool) e
 			return nil, err
 		}
 		defer fd.Close()
-
-		return ioutil.ReadAll(fd)
+		return io.ReadAll(fd)
 	}
 
 	for _, pt := range bk.Ncx.Points {
 		for _, np := range pt.Points {
 
 			name := np.Text
-
 			data, err := readerF(np.Content.Src)
 			if err != nil {
-				return err
+				// Improve EPUB asset file content parsing https://github.com/siyuan-note/siyuan/issues/9072
+				// Ignore error
+				return nil
 			}
 
 			if !onChapter(name, data) {
 				return nil
 			}
-
 		}
 	}
-
 	return nil
 }
 
 func ToTxt(filename string, output io.Writer) error {
-
 	notFirst := false
-
 	return Reader(filename, func(chapter string, data []byte) bool {
-
 		parser := html.New()
 		parser.Parse(bytes.NewReader(data))
 
@@ -98,7 +91,6 @@ func ToTxt(filename string, output io.Writer) error {
 		}
 
 		output.Write(parser.Text())
-
 		return true
 	})
 }

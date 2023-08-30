@@ -6,7 +6,9 @@ import (
 )
 
 func TestReader(t *testing.T) {
-	bk, err := Open("./data/test.epub")
+	fn := "./data/test.epub"
+
+	bk, err := Open(fn)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -19,7 +21,7 @@ func TestReader(t *testing.T) {
 
 	i := 0
 
-	Reader("./data/test.epub", func(n string, data []byte) bool {
+	Reader(fn, func(n string, data []byte) bool {
 		i++
 		if data == nil {
 			t.Fatal("reader failed")
@@ -33,7 +35,7 @@ func TestReader(t *testing.T) {
 
 	buf := bytes.NewBuffer(nil)
 
-	ToTxt("./data/test.epub", buf)
+	ToTxt(fn, buf)
 
 	if buf.Len() == 0 {
 		t.Fatal("ToTxt failed")

@@ -5,8 +5,8 @@ import (
 	"encoding/xml"
 	"errors"
 	"io"
-	"io/ioutil"
 	"path"
+	"strings"
 )
 
 type Book struct {
@@ -55,7 +55,7 @@ func (p *Book) readBytes(n string) ([]byte, error) {
 	}
 	defer fd.Close()
 
-	return ioutil.ReadAll(fd)
+	return io.ReadAll(fd)
 
 }
 
@@ -65,5 +65,21 @@ func (p *Book) open(n string) (io.ReadCloser, error) {
 			return f.Open()
 		}
 	}
-	return nil, errors.New(n + " not found!")
+
+	if !strings.ContainsAny(n, "-_") {
+		return nil, errors.New(n + " not found")
+	}
+
+	// Improve EPUB asset file content parsing https://github.com/siyuan-note/siyuan/issues/9072
+	nn := strings.ReplaceAll(n, "-", "")
+	nn = strings.ReplaceAll(nn, "_", "")
+	for _, f := range p.fd.File {
+		fn := strings.ReplaceAll(f.Name, "-", "")
+		fn = strings.ReplaceAll(fn, "_", "")
+
+		if fn == nn {
+			return f.Open()
+		}
+	}
+	return nil, errors.New(n + " not found")
 }
