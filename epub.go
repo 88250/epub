@@ -3,8 +3,9 @@ package epub
 import (
 	"archive/zip"
 	"bytes"
-	"github.com/wmentor/html"
 	"io"
+
+	"github.com/wmentor/html"
 )
 
 func Open(fn string) (*Book, error) {
@@ -59,18 +60,32 @@ func Reader(filename string, onChapter func(chapter string, data []byte) bool) e
 		return io.ReadAll(fd)
 	}
 
+	pointerF := func(np NavPoint) bool {
+		name := np.Text
+		data, err := readerF(np.Content.Src)
+		if err != nil {
+			// Improve EPUB asset file content parsing https://github.com/siyuan-note/siyuan/issues/9072
+			// Ignore error
+			return false
+		}
+
+		if !onChapter(name, data) {
+			return false
+		}
+		return true
+	}
+
 	for _, pt := range bk.Ncx.Points {
-		for _, np := range pt.Points {
-
-			name := np.Text
-			data, err := readerF(np.Content.Src)
-			if err != nil {
-				// Improve EPUB asset file content parsing https://github.com/siyuan-note/siyuan/issues/9072
-				// Ignore error
-				return nil
+		if pt.Points != nil && 0 < len(pt.Points) {
+			for _, np := range pt.Points {
+				keepReading := pointerF(np)
+				if !keepReading {
+					return nil
+				}
 			}
-
-			if !onChapter(name, data) {
+		} else {
+			keepReading := pointerF(pt)
+			if !keepReading {
 				return nil
 			}
 		}

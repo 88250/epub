@@ -19,6 +19,9 @@ type Book struct {
 }
 
 func (p *Book) Open(n string) (io.ReadCloser, error) {
+	if 0 < strings.Index(n, "#") {
+		n = strings.Split(n, "#")[0]
+	}
 	return p.open(p.filename(n))
 }
 
