@@ -1,4 +1,4 @@
-module github.com/88250/epub
+module github.com/glenatron/epub
 
 go 1.15
 
